@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Isaiah's Snake Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    body {
+      margin: 0;
+      background-color: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: 'Roboto', sans-serif;
+    }
+    .scoreboard {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    canvas {
+      border: 2px solid white;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="scoreboard">Score: <span id="score">0</span></div>
+  <canvas id="canvas" width="256" height="256"></canvas>
+  <script>
+    let ctx = canvas.getContext("2d");
+    let snake = [[8, 8]];
+    let apple = [4, 4];
+    let [dx, dy] = [1, 0]; // Initial movement direction set to right
+    let interval;
+    let score = 0;
+    const scoreElement = document.getElementById('score');
+
+    onkeydown = ({key}) => [dx, dy] =
+      { [key]: [dx, dy], ArrowRight: [1, 0], ArrowLeft: [-1, 0],
+                        ArrowDown: [0, 1], ArrowUp: [0, -1] }[key] || [dx, dy];
+
+    function drawGrid() {
+      const gradient = ctx.createLinearGradient(0, 0, 256, 256);
+      gradient.addColorStop(0, '#0f0c29');
+      gradient.addColorStop(1, '#302b63');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 256, 256);
+    }
+
+    function drawCircle(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x * 16 + 8, y * 16 + 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function gameLoop() {
+      let [headX, headY] = [snake[0][0] + dx, snake[0][1] + dy];
+
+      // Check for collisions with walls
+      if (headX < 0 || headX >= 16 || headY < 0 || headY >= 16) {
+        clearInterval(interval);
+        alert("Game Over!");
+        location.reload();
+        return;
+      }
+
+      // Check for collisions with itself
+      if (snake.some(([x, y]) => x === headX && y === headY)) {
+        clearInterval(interval);
+        alert("Game Over!");
+        location.reload();
+        return;
+      }
+
+      snake.unshift([headX, headY]);
+
+      // Check if apple is eaten
+      if (headX === apple[0] && headY === apple[1]) {
+        score++;
+        scoreElement.textContent = score;
+        with (Math) do apple = [floor(random() * 16), floor(random() * 16)];
+        while (snake.some(seg => seg[0] === apple[0] && seg[1] === apple[1]));
+      } else {
+        snake.pop();
+      }
+
+      drawGrid();
+      drawCircle(apple[0], apple[1], "red");
+      snake.forEach(([x, y], index) => drawCircle(x, y, index === 0 ? "lime" : "lightgreen"));
+    }
+
+    function startGame() {
+      drawGrid();
+      drawCircle(apple[0], apple[1], "red");
+      snake.forEach(([x, y]) => drawCircle(x, y, "lime"));
+
+      interval = setInterval(gameLoop, 125);
+    }
+
+    // Display title and "Get Ready" message, then start the game after a delay
+    ctx.fillStyle = "white";
+    ctx.font = "20px 'Roboto', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Isaiah's Snake Game", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.fillText("Get Ready!", canvas.width / 2, canvas.height / 2 + 20);
+
+    setTimeout(startGame, 2000); // 2-second delay before starting the game
+  </script>
+</body>
+</html>
